@@ -1,0 +1,20 @@
+{
+  "name": "coding-interview",
+  "version": "1.0.0",
+  "main": "index.js",
+  "private": true,
+  "scripts": {
+    "format": "npx @biomejs/biome format --write ./src ./tests",
+    "lint": "npx @biomejs/biome lint --write ./src ./tests",
+    "test": "tsx --test"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@biomejs/biome": "1.8.3",
+    "@types/node": "^20.14.9",
+    "tsx": "^4.16.2",
+    "typescript": "^5.5.3"
+  }
+}

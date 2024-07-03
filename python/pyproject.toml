@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "hello"
+version = "0.1.0"
+description = ""
+authors = []
+
+[tool.poetry.dependencies]
+python = "^3.12"
+
+[tool.poetry.dev-dependencies]
+black = "^24.4.2"
+pytest = "^8.2.2"
+pytest-watch = "^4.2.0"
+mypy = "^1.10.1"
+
