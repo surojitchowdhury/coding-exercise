@@ -11,7 +11,7 @@ $ npm install
 
 ## Running tests
 
-Tests use Node's built-in `assert` and `test` modules.
+Tests use Jest.
 
 To run tests once, execute:
 
