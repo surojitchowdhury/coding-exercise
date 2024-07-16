@@ -6,15 +6,26 @@
   "scripts": {
     "format": "npx @biomejs/biome format --write ./src ./tests",
     "lint": "npx @biomejs/biome lint --write ./src ./tests",
-    "test": "tsx --test"
+    "test": "jest"
   },
   "author": "",
   "license": "ISC",
   "description": "",
   "devDependencies": {
     "@biomejs/biome": "1.8.3",
+    "@types/jest": "^29.5.12",
     "@types/node": "^20.14.9",
-    "tsx": "^4.16.2",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.2.2",
     "typescript": "^5.5.3"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "transform": {
+      "^.+.tsx?$": [
+        "ts-jest",
+        {}
+      ]
+    }
   }
 }
