@@ -1,5 +1,10 @@
 # Python
 
+## Requirements
+
+- Python 3.10+
+- Poetry 1.8+
+
 ## Installation
 
 Clone the repository, navigate to the `python` folder and install dependencies

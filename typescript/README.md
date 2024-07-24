@@ -1,5 +1,9 @@
 # TypeScript
 
+## Requirements
+
+- Node 20+
+
 ## Installation
 
 Clone the repository, navigate to the `typescript` folder and install
