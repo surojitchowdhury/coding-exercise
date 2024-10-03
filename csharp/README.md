@@ -2,9 +2,11 @@
 
 ## Prerequisites
 
-### Installing .NET
+### Setting Up the Development Environment
 
-Before you can run this project, you need to install the .NET SDK. Follow these steps to install the necessary prerequisites:
+You have two options to set up your development environment:
+
+#### Option 1: Installing .NET Locally
 
 1. Visit the official .NET download page: https://dotnet.microsoft.com/download
 
@@ -19,6 +21,24 @@ Before you can run this project, you need to install the .NET SDK. Follow these 
    This should display the version number of the installed .NET SDK.
 
 4. If you encounter any issues, refer to the official .NET documentation for troubleshooting: https://docs.microsoft.com/en-us/dotnet/
+
+#### Option 2: Using Dev Containers (Recommended)
+
+If you're using Visual Studio Code or another IDE that supports Dev Containers, you can use the included `.devcontainer` files to set up a consistent development environment:
+
+1. Ensure you have Docker installed on your system.
+
+2. Install the "Remote - Containers" extension in VS Code.
+
+3. Open the project folder in VS Code.
+
+4. When prompted, click "Reopen in Container" or use the command palette (F1) and select "Remote-Containers: Reopen in Container".
+
+5. VS Code will build the Docker container and set up the development environment with all necessary dependencies.
+
+6. Once the container is built, you can use the integrated terminal in VS Code to run commands like `dotnet build` and `dotnet run`.
+
+Using Dev Containers ensures that all developers work with the same environment, regardless of their local setup, and makes it easier to get started with the project quickly.
 
 ## Getting Started
 
