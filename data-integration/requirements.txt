@@ -1,0 +1,8 @@
+duckdb
+pandas
+numpy
+faker
+pytz
+flask
+pytest
+dbt-duckdb
