@@ -4,8 +4,9 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class AppTest {
+
     @Test
-    fun testGreeting() {
+    fun `displays greeting`() {
         assertEquals(hello("NewStore"), "Hello, NewStore!")
     }
 }
