@@ -1,6 +1,5 @@
-.gradle
-/build/
+.gradle/
+.kotlin/
+build/
 gradle-app.setting
 !gradle-wrapper.jar
-.gradletasknamecache
-build
