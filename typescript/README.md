@@ -4,27 +4,26 @@
 
 - Node 20+
 
-## Installation
-
-Clone the repository, navigate to the `typescript` folder and install
-dependencies using NPM:
-
+If you use `asdf`, just run:
+```shell
+asdf install
 ```
-$ npm install
+
+Install dependencies using NPM:
+
+```shell
+npm install
 ```
 
 ## Running tests
 
-Tests use Jest.
+Tests use Jest. To run tests once, execute:
 
-To run tests once, execute:
-
-```
-$ npm test
+```shell
+npm test
 ```
 
 To run tests in watch mode, execute:
-
-```
-$ npm test -- --watch
+```shell
+npm test -- --watch
 ```

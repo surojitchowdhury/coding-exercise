@@ -5,13 +5,18 @@
 - Python 3.10+
 - Poetry 1.8+
 
-## Installation
+If you use `asdf`, just run:
 
-Clone the repository, navigate to the `python` folder and install dependencies
-using Poetry:
-
+```shell
+asdf install
 ```
-$ poetry install
+
+## Getting started
+
+Install dependencies using Poetry:
+
+```shell
+poetry install
 ```
 
 ## Running tests
@@ -20,12 +25,12 @@ Tests use the `pytest` package.
 
 To run tests once, execute:
 
-```
-$ poetry run pytest
+```shell
+poetry run pytest
 ```
 
 To run tests in watch mode, execute:
 
-```
-$ poetry run ptw
+```shell
+poetry run ptw
 ```

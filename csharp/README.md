@@ -14,7 +14,7 @@ You have two options to set up your development environment:
 
 3. After installation, verify that .NET is correctly installed by opening a terminal or command prompt and running:
 
-   ```
+   ```shell
    dotnet --version
    ```
 
@@ -43,7 +43,7 @@ Using Dev Containers ensures that all developers work with the same environment,
 ## Getting Started
 
 Build the project:
-   ```
+   ```shell
    dotnet build
    ```
 
@@ -51,7 +51,7 @@ Build the project:
 
 To run the main project, use the following command in the terminal:
 
-```
+```shell
 dotnet run --project HelloProject
 ```
 
@@ -59,7 +59,7 @@ dotnet run --project HelloProject
 
 To run the tests for this project, use the following command:
 
-```
+```shell
 dotnet test
 ```
 

@@ -4,6 +4,12 @@
 
 - Golang 1.20+
 
+If you use `asdf`, just run:
+
+```shell
+asdf install
+```
+
 ## Getting started
 
 Clone the repository and navigate to the `golang` folder.
@@ -12,6 +18,6 @@ Clone the repository and navigate to the `golang` folder.
 
 Tests use the `testing` package. To run tests once, execute:
 
-```
-$ go test
+```shell
+go test
 ```

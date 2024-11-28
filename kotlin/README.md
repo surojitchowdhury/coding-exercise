@@ -2,18 +2,22 @@
 
 ## Getting started
 
-Clone the repository and navigate to the `kotlin` folder.
+If you use `asdf`, just run:
+
+```shell
+asdf install
+```
 
 ## Running tests
 
 To run tests once, execute:
 
-```
-$ ./gradlew test
+```shell
+./gradlew test
 ```
 
 To run tests in watch mode, execute:
 
 ```
-$ ./gradlew -t test
+./gradlew -t test
 ```
