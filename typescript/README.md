@@ -1,15 +1,8 @@
 # TypeScript
 
-## Requirements
+# Setup
 
-- Node 20+
-
-If you use `asdf`, just run:
-```shell
-asdf install
-```
-
-Install dependencies using NPM:
+Install dependencies:
 
 ```shell
 npm install
@@ -17,13 +10,13 @@ npm install
 
 ## Running tests
 
-Tests use Jest. To run tests once, execute:
 
 ```shell
 npm test
 ```
 
-To run tests in watch mode, execute:
+Run in watch mode:
+
 ```shell
 npm test -- --watch
 ```

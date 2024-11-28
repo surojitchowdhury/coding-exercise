@@ -1,17 +1,6 @@
 # Python
 
-## Requirements
-
-- Python 3.10+
-- Poetry 1.8+
-
-If you use `asdf`, just run:
-
-```shell
-asdf install
-```
-
-## Getting started
+## Setup
 
 Install dependencies using Poetry:
 
@@ -19,9 +8,7 @@ Install dependencies using Poetry:
 poetry install
 ```
 
-## Running tests
-
-Tests use the `pytest` package.
+## Running the tests
 
 To run tests once, execute:
 
