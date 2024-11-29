@@ -8,7 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class AppTest {
 
   @Test
-  public void displaysGreeting() {
+  void displaysGreeting() {
     assertEquals("Hello, NewStore!", hello("NewStore"));
   }
 }
