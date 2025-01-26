@@ -18,13 +18,28 @@ def test_table_creations():
     
         data = result.to_dict(orient='records')
         tables = [item['name'] for item in data]
-        assert set(["sales_activity","country","location"]).issubset(set(tables))
+        assert set(["sales_activity","country","location", "associate", "currency", "product", "order_tab", "activity", "sales"]).issubset(set(tables))
 
 
         result = con.execute("SELECT * FROM location").fetch_df()
         data = result.to_dict(orient='records')
         locations = [item['location'] for item in data]
         assert set(["Cervantesmouth", "Rochaside"]).issubset(set(locations))
+
+        result = con.execute("SELECT COUNT(*) as cnt FROM order_tab").fetch_df()
+        data = result.to_dict(orient='records')
+        row_cnt = [item['cnt'] for item in data]
+        assert row_cnt[0]>0
+
+        result = con.execute("SELECT COUNT(*) as cnt FROM activity").fetch_df()
+        data = result.to_dict(orient='records')
+        row_cnt = [item['cnt'] for item in data]
+        assert row_cnt[0]>0
+
+        result = con.execute("SELECT COUNT(*) as cnt FROM sales").fetch_df()
+        data = result.to_dict(orient='records')
+        row_cnt = [item['cnt'] for item in data]
+        assert row_cnt[0]>0
 
 
     
