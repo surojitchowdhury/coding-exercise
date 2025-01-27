@@ -55,12 +55,14 @@ def fact_dim_table_loads():
             qry3 = """
                         CREATE TABLE IF NOT EXISTS location  AS
                         SELECT 
-                            uuid()  as location_id,
+                            uuid() as location_id,
                             location as location
                         FROM (
                                 SELECT distinct
+                                --activity__location_id as  location_id,
                                  activity__location as location
                                 FROM raw_sales
+                                WHERE activity__location is not null
                             ) l
             """
             con.execute(qry3)
@@ -68,9 +70,10 @@ def fact_dim_table_loads():
             con.execute("DROP TABLE IF EXISTS associate")
             qry4 = """CREATE TABLE IF NOT EXISTS associate  AS
                         SELECT 
-                            uuid()  as associate_id,
+                            associate_id  as associate_id,
                             associate as associate
                         FROM (SELECT distinct
+                            sale__assigned_associate_id as associate_id,
                             sale__assigned_associate as associate
                         FROM raw_sales) r
             """
@@ -236,7 +239,7 @@ def get_total_sales_last_year():
         with Database() as con:
             qry = """
             SELECT 
-                CAST(SUM(sale__price_net) AS DECIMAL(10,2)) as total_sales
+                CAST(SUM(sale__price_net) AS DECIMAL(20,2)) as total_sales
             FROM
                 sales
             WHERE CAST(sale__date_local AS DATE) > current_date - INTERVAL 365 DAY
@@ -264,8 +267,8 @@ def get_total_net_sales_next10_years():
             SELECT (total_sales-total_tax) AS net_sales
             FROM (
             SELECT 
-                CAST(SUM(sale__price_net) AS DECIMAL(10,2)) as total_sales,
-                CAST(SUM(sale__price_tax) AS DECIMAL(10,2)) as total_tax
+                CAST(SUM(sale__price_net) AS DECIMAL(20,2)) as total_sales,
+                CAST(SUM(sale__price_tax) AS DECIMAL(20,2)) as total_tax
             FROM
                 sales
             WHERE CAST(sale__date_local AS DATE) <= current_date + INTERVAL 10 YEAR
