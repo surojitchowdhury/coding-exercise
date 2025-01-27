@@ -60,3 +60,17 @@ def test_table_creations():
         assert row_cnt_sales[0]==row_cnt_raw_sales[0]
 
     
+def test_get_total_sales_last_year():
+    """Testing total sales last year"""
+
+    response = app.test_client().get('/get_total_sales_last_year')
+    assert response.status_code == 200
+    assert response.json > 0
+
+
+def test_get_total_net_sales_next10_years():
+    """Testing total net sales for next 10 year"""
+
+    response = app.test_client().get('/get_total_net_sales_next10_years')
+    assert response.status_code == 200
+    assert response.json > 0

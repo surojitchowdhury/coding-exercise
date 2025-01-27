@@ -36,7 +36,7 @@ def fact_dim_table_loads():
     """Function to load fact dimension tables"""
     try:
         with Database() as con:
-            con.execute("PRAGMA max_temp_directory_size='40GiB'")
+            #con.execute("PRAGMA max_temp_directory_size='40GiB'")
 
             con.execute("DROP TABLE IF EXISTS country")
             qry2 = """CREATE TABLE IF NOT EXISTS country  AS
@@ -228,6 +228,62 @@ def fact_dim_table_loads():
             'message': 'Generic error. Please contact Support'
             }), 500
 
+
+@app.route('/get_total_sales_last_year')
+def get_total_sales_last_year():
+    """Function to get_total_sales_last_year"""
+    try:
+        with Database() as con:
+            qry = """
+            SELECT 
+                CAST(SUM(sale__price_net) AS DECIMAL(10,2)) as total_sales
+            FROM
+                sales
+            WHERE CAST(sale__date_local AS DATE) > current_date - INTERVAL 365 DAY
+            AND CAST(sale__date_local AS DATE) <= current_date
+            """
+            result = con.execute(qry).fetch_df()
+            data = result.to_dict(orient='records')
+            print(f"Total sales last year: {data[0]['total_sales']}")
+            return jsonify(data[0]["total_sales"])
+
+
+    except Exception as e:
+        logger.error(f"Undefined error accessing the database: {e}")
+        return jsonify({
+            'error': 'Internal Server Error',
+            'message': 'Generic error. Please contact Support'
+            }), 500
+
+@app.route('/get_total_net_sales_next10_years')
+def get_total_net_sales_next10_years():
+    """Function to get_total_net_sales_next10_years"""
+    try:
+        with Database() as con:
+            qry = """
+            SELECT (total_sales-total_tax) AS net_sales
+            FROM (
+            SELECT 
+                CAST(SUM(sale__price_net) AS DECIMAL(10,2)) as total_sales,
+                CAST(SUM(sale__price_tax) AS DECIMAL(10,2)) as total_tax
+            FROM
+                sales
+            WHERE CAST(sale__date_local AS DATE) <= current_date + INTERVAL 10 YEAR
+            AND CAST(sale__date_local AS DATE) > current_date
+            ) temp
+            """
+            result = con.execute(qry).fetch_df()
+            data = result.to_dict(orient='records')
+            print(f"Total net sales for next 10 years: {data[0]['net_sales']}")
+            return jsonify(data[0]["net_sales"])
+
+
+    except Exception as e:
+        logger.error(f"Undefined error accessing the database: {e}")
+        return jsonify({
+            'error': 'Internal Server Error',
+            'message': 'Generic error. Please contact Support'
+            }), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
