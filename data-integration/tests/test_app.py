@@ -26,6 +26,16 @@ def test_table_creations():
         locations = [item['location'] for item in data]
         assert set(["Cervantesmouth", "Rochaside"]).issubset(set(locations))
 
+        result = con.execute("SELECT COUNT(*) as cnt FROM location").fetch_df()
+        data = result.to_dict(orient='records')
+        row_cnt = [item['cnt'] for item in data]
+        #assert row_cnt[0]==0
+
+        result = con.execute("SELECT COUNT(*) as cnt FROM currency").fetch_df()
+        data = result.to_dict(orient='records')
+        row_cnt = [item['cnt'] for item in data]
+        #assert row_cnt[0]==0
+
         result = con.execute("SELECT COUNT(*) as cnt FROM order_tab").fetch_df()
         data = result.to_dict(orient='records')
         row_cnt = [item['cnt'] for item in data]
@@ -41,5 +51,12 @@ def test_table_creations():
         row_cnt = [item['cnt'] for item in data]
         assert row_cnt[0]>0
 
+        result = con.execute("SELECT COUNT(*) as cnt FROM sales").fetch_df()
+        data = result.to_dict(orient='records')
+        row_cnt_sales = [item['cnt'] for item in data]
+        result = con.execute("SELECT COUNT(*) as cnt FROM raw_sales").fetch_df()
+        data = result.to_dict(orient='records')
+        row_cnt_raw_sales = [item['cnt'] for item in data]
+        assert row_cnt_sales[0]==row_cnt_raw_sales[0]
 
     
