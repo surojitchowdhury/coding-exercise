@@ -1,5 +1,6 @@
 from app import app, fact_dim_table_loads
 from db import Database, TableNotFoundException
+from unittest.mock import patch
 
 def test_root_route():
     """Testing root route"""
@@ -8,6 +9,20 @@ def test_root_route():
     assert response.status_code == 200
     assert len(response.json) == 10
     assert isinstance(response.json, list)
+
+@patch("app.Database.getTable", side_effect= TableNotFoundException)
+def test_root_exception(mock_get_table):
+    """Testing root route"""
+    response = app.test_client().get('/')
+    assert response.status_code == 500
+    assert 'Raw data source for sales is not properly configured' in response.json['message'] 
+    
+@patch("app.Database.getTable", side_effect= Exception)
+def test_root_exception2(mock_get_table):
+    """Testing root route"""
+    response = app.test_client().get('/')
+    assert response.status_code == 500
+    assert 'Generic error' in response.json['message'] 
 
 def test_table_creations():
     """Testing table creations"""
