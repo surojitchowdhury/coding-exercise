@@ -17,7 +17,7 @@ def test_root_exception(mock_get_table):
     assert response.status_code == 500
     assert 'Raw data source for sales is not properly configured' in response.json['message'] 
     
-@patch("app.Database.getTable", side_effect= Exception)
+@patch.object(Database, "__enter__",side_effect= Exception)
 def test_root_exception2(mock_get_table):
     """Testing root route"""
     response = app.test_client().get('/')
