@@ -1,6 +1,8 @@
-from app import app, fact_dim_table_loads
+from app import app, generate_fiscal_calendar, load_fiscal_table, load_fact_dim_tables
 from db import Database, TableNotFoundException
 from unittest.mock import patch
+from pandas import DataFrame
+from pytest import raises
 
 def test_root_route():
     """Testing root route"""
@@ -27,7 +29,7 @@ def test_root_exception2(mock_get_table):
 def test_table_creations():
     """Testing table creations"""
 
-    response = app.test_client().get('/data_load')
+    response = app.test_client().get('/data_load_from_file')
     with Database() as con:
         result = con.execute("SHOW TABLES").fetch_df()
     
@@ -89,3 +91,66 @@ def test_get_total_net_sales_next10_years():
     response = app.test_client().get('/get_total_net_sales_next10_years')
     assert response.status_code == 200
     assert response.json > 0
+
+def test_generate_fiscal_calendar():
+    """Testing fiscal calendar generate function"""
+    response = generate_fiscal_calendar(start_month = 4,calendar_type = "4-4-5", years=2)
+    assert isinstance(response, DataFrame)
+    assert response.query('standard_date=="2024-04-01"')['fiscal_period'].iloc[0] == 1
+
+def test_generate_fiscal_calendar_exception():
+    """Testing fiscal calendar generate function"""
+    with raises(ValueError):
+        response = generate_fiscal_calendar(start_month = 4,calendar_type = "5-4-5", years=2)
+
+
+def test_load_fiscal_table():
+    """Testing fiscal calendar duckdb load"""
+    load_fiscal_table(start_month = 4,calendar_type = "4-4-5", years=2)
+    
+    with Database() as con:
+        result = con.execute("SELECT COUNT(*) as cnt FROM fiscal_calendar").fetch_df()
+        data = result.to_dict(orient = 'records')
+        assert data[0]['cnt'] > 0
+
+        result = con.execute("SELECT fiscal_period FROM fiscal_calendar WHERE standard_date='2024-04-01'").fetch_df()
+        data = result.to_dict(orient = 'records')
+        assert data[0]['fiscal_period'] == 1
+
+
+def test_load_fact_dim_tables():
+    """Testing fact dim duckdb load"""
+    load_fact_dim_tables()
+    
+    with Database() as con:
+        result = con.execute("SELECT COUNT(*) as cnt FROM tenants").fetch_df()
+        data = result.to_dict(orient = 'records')
+        assert data[0]['cnt'] > 0
+
+        result = con.execute("SELECT COUNT(*) as cnt FROM read_parquet('sales_tab/*/*/*.parquet', hive_partitioning = true)").fetch_df()
+        data = result.to_dict(orient = 'records')
+        assert data[0]['cnt'] > 0
+
+
+def test_get_total_sales():
+    """Testing get_total_sales"""
+    response = app.test_client().get('/v1/get_total_sales?tenant=acme_industries&start_date=2024-01-01&end_date=2024-12-31')
+    
+    assert response.status_code == 200
+    assert len(response.json) > 0
+    assert "tenant" in response.json[0]
+
+def test_get_total_sales_error():
+    """Testing get_total_sales"""
+    response = app.test_client().get('/v1/get_total_sales?start_date=2024-01-01&end_date=2024-12-31')
+    
+    assert response.status_code == 400
+    assert response.json["error"] == "tenant field is mandatory"
+
+@patch.object(Database, "__enter__", side_effect = Exception("connection error"))
+def test_get_total_sales_error1(mock_db):
+    """Testing get_total_sales"""
+    response = app.test_client().get('/v1/get_total_sales?tenant=acme_industries&start_date=2024-01-01&end_date=2024-12-31')
+    
+    assert response.status_code == 500
+    assert "Generic error" in response.json["message"] 
