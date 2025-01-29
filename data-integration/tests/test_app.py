@@ -1,4 +1,4 @@
-from app import app, generate_fiscal_calendar, load_fiscal_table, load_fact_dim_tables
+from app import app, generate_fiscal_calendar, load_fiscal_table, load_fact_dim_tables,load_fact_tables_per_tenant
 from db import Database, TableNotFoundException
 from unittest.mock import patch
 from pandas import DataFrame
@@ -179,3 +179,24 @@ def test_get_fiscal_sales_yoy_error1(mock_db):
     
     assert response.status_code == 500
     assert "Generic error" in response.json["message"] 
+
+
+
+def test_load_fact_tables_per_tenant():
+    """Testing fact dim duckdb load"""
+    load_fact_tables_per_tenant()
+    tenant = "acme_industries"
+    db_path = f"{DATA_PATH}/tenant_{tenant}.duckdb"
+    with Database(db_path=tenant) as con:
+        result = con.execute(f"SELECT COUNT(*) as cnt FROM read_parquet('{DATA_PATH}/sales_{tenant}/*/*.parquet', hive_partitioning = true)").fetch_df()
+        data = result.to_dict(orient = 'records')
+        assert data[0]['cnt'] > 0
+
+
+def test_get_total_sales2():
+    """Testing get_total_sales"""
+    response = app.test_client().get('/v2/get_total_sales?tenant=acme_industries&start_date=2024-01-01&end_date=2024-12-31')
+    
+    assert response.status_code == 200
+    assert len(response.json) > 0
+    assert "sale_year" in response.json[0]

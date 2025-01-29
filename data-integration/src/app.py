@@ -3,7 +3,7 @@ from db import Database, TableNotFoundException
 import logging
 import pandas as pd
 from datetime import datetime, timedelta
-from config import DATA_PATH
+from config import DATA_PATH, DATABASE_PATH
 
 app = Flask(__name__)
 
@@ -445,7 +445,7 @@ def get_total_sales():
     start_date = request.args.get("start_date")
     end_date = request.args.get("end_date")
 
-    print(f"tenant: {tenant}, start_date: {start_date}, end_date: {end_date}")
+    print(f"This is in V1!!tenant: {tenant}, start_date: {start_date}, end_date: {end_date}")
     logger.info(f"tenant: {tenant}, start_date: {start_date}, end_date: {end_date}")
     if not tenant:
         return jsonify({"error": "tenant field is mandatory"}), 400
@@ -566,6 +566,92 @@ def get_fiscal_sales_yoy():
             
 
             result = con.execute(query, (tenant,fiscal_year,fiscal_quarter, fiscal_period,tenant,previous_year,fiscal_quarter, fiscal_period)).fetch_df()
+            return jsonify(result.to_dict(orient='records'))
+    
+    except Exception as e:
+        logger.error(f"Undefined error accessing the database: {e}")
+        return jsonify({
+            'error': 'Internal Server Error',
+            'message': 'Generic error. Please contact Support'
+            }), 500
+
+
+def load_fact_tables_per_tenant():
+    """
+        Load fact dimensional tables from raw table per tenants
+    """
+
+    try:
+        with Database() as con:
+            #get distinct tenants
+            result = con.execute("""SELECT DISTINCT
+                                    tenant
+                            FROM raw_sales
+                        """).fetch_df()
+            data = result.to_dict(orient='records')
+            tenants = [item['tenant'] for item in data]
+    except Exception as e:
+        logger.error(f"Undefined error while loading fact dimensional tables: {e}")
+
+    for tenant in tenants:
+        try:
+            db_path = f"{DATA_PATH}/tenant_{tenant}.duckdb"
+            with Database(db_path=db_path) as con:
+                con.execute(f"ATTACH '{DATABASE_PATH}' AS raw_db (READ_ONLY)")
+                con.execute(f"""COPY (
+                                SELECT 
+                                    date_part('year', sale__date_local) as sale_year,
+                                    sale__date_local,
+                                    sale__store_id,
+                                    sale__price_net,
+                                    sale__price_tax,
+                                    sale__order_status
+                                FROM 
+                                    (SELECT DISTINCT
+                                        sale__date_local,
+                                        sale__store_id,
+                                        sale__price_net,
+                                        sale__price_tax,
+                                        sale__order_status
+                                    FROM raw_db.raw_sales
+                                    ) t1
+                                ) TO '{DATA_PATH}/sales_{tenant}' (FORMAT PARQUET, PARTITION_BY ( sale_year), COMPRESSION SNAPPY, OVERWRITE)
+                            """)
+        except Exception as e:
+            logger.error(f"Undefined error while loading fact dimensional tables: {e}")
+
+
+@app.route('/v2/get_total_sales')
+def get_total_sales_v2():
+    """Function to get total sales last year"""
+    tenant = request.args.get("tenant")
+    start_date = request.args.get("start_date")
+    end_date = request.args.get("end_date")
+
+    print(f"This is in V2!!tenant: {tenant}, start_date: {start_date}, end_date: {end_date}")
+    logger.info(f"tenant: {tenant}, start_date: {start_date}, end_date: {end_date}")
+    if not tenant:
+        return jsonify({"error": "tenant field is mandatory"}), 400
+
+    try:
+        db_path = f"{DATA_PATH}/tenant_{tenant}.duckdb"
+        with Database(db_path = db_path) as con:
+            query = f"""SELECT
+                            sale_year,
+                            SUM(sale__price_net) as total_sales
+                        FROM
+                            read_parquet("{DATA_PATH}/sales_{tenant}/*/*.parquet", hive_partitioning = true) as sales                    
+                         
+            """
+            
+            if start_date:
+                query += f" WHERE sale__order_status != 'return' AND CAST(sale__date_local AS DATE) >= CAST('{start_date}' AS DATE)"
+
+            if end_date:
+                query += f" AND CAST(sale__date_local AS DATE) <= CAST('{end_date}' AS DATE)"
+
+            query += "GROUP BY sale_year"
+            result = con.execute(query).fetch_df()
             return jsonify(result.to_dict(orient='records'))
     
     except Exception as e:
