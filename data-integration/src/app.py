@@ -3,6 +3,7 @@ from db import Database, TableNotFoundException
 import logging
 import pandas as pd
 from datetime import datetime, timedelta
+from config import DATA_PATH
 
 app = Flask(__name__)
 
@@ -413,7 +414,7 @@ def load_fact_dim_tables():
                                 FROM raw_sales
                                 ) temp
                         """)
-            con.execute("""COPY (
+            con.execute(f"""COPY (
                             SELECT 
                                 t.tenant_id as tenant_id,
                                 date_part('year', sale__date_local) as sale_year,
@@ -431,7 +432,7 @@ def load_fact_dim_tables():
                                 FROM raw_sales
                                 ) t1
                                 LEFT JOIN tenants t on (t1.tenant=t.tenant)
-                            ) TO 'sales_tab' (FORMAT PARQUET, PARTITION_BY (tenant_id, sale_year), COMPRESSION SNAPPY, OVERWRITE)
+                            ) TO '{DATA_PATH}/sales_tab' (FORMAT PARQUET, PARTITION_BY (tenant_id, sale_year), COMPRESSION SNAPPY, OVERWRITE)
                         """)
     except Exception as e:
         logger.error(f"Undefined error while loading fact dimensional tables: {e}")
@@ -456,7 +457,7 @@ def get_total_sales():
                             sale_year,
                             SUM(sale__price_net) as total_sales
                         FROM
-                            read_parquet('sales_tab/*/*/*.parquet', hive_partitioning = true) as sales
+                            read_parquet('{DATA_PATH}/sales_tab/*/*/*.parquet', hive_partitioning = true) as sales
                         JOIN
                             tenants t ON (t.tenant_id=sales.tenant_id)
                     
@@ -471,6 +472,100 @@ def get_total_sales():
 
             query += "GROUP BY tenant,sale_year"
             result = con.execute(query).fetch_df()
+            return jsonify(result.to_dict(orient='records'))
+    
+    except Exception as e:
+        logger.error(f"Undefined error accessing the database: {e}")
+        return jsonify({
+            'error': 'Internal Server Error',
+            'message': 'Generic error. Please contact Support'
+            }), 500
+
+
+@app.route('/v1/get_fiscal_sales_yoy')
+def get_fiscal_sales_yoy():
+    """Function to get total sales last year compared yoy"""
+    tenant = request.args.get("tenant")
+    fiscal_year = request.args.get("fiscal_year", type==int)
+    fiscal_quarter = request.args.get("fiscal_quarter", type==int)
+    fiscal_period = request.args.get("fiscal_period", type==int)
+
+    previous_year = int(fiscal_year) - 1
+    if not tenant:
+        return jsonify({"error": "tenant field is mandatory"}), 400
+
+    #Loading fiscal table
+    load_fiscal_table(4, calendar_type="4-4-5", years=2)
+    try:
+        with Database() as con:
+            query = f"""WITH current_year_sales AS
+                        (
+                            SELECT
+                                tenant,
+                                fiscal_year,
+                                fiscal_quarter,
+                                fiscal_period,
+                                SUM(sale__price_net) as total_sales
+                            FROM
+                                read_parquet("{DATA_PATH}/sales_tab/*/*/*.parquet", hive_partitioning = true) as sales
+                            JOIN
+                                tenants t ON (t.tenant_id=sales.tenant_id)
+                            JOIN fiscal_calendar c on (CAST(sales.sale__date_local AS DATE) = c.standard_date)
+                            WHERE tenant = ?
+                                AND c.fiscal_year = ?
+                                AND c.fiscal_quarter = ?
+                                AND c.fiscal_period = ?
+                            GROUP BY
+                                tenant,
+                                fiscal_year,
+                                fiscal_quarter,
+                                fiscal_period,
+                        ) ,
+                        prev_year_sales AS (
+                            SELECT
+                                tenant,
+                                fiscal_year,
+                                fiscal_quarter,
+                                fiscal_period,
+                                SUM(sale__price_net) as total_sales
+                            FROM
+                                read_parquet("{DATA_PATH}/sales_tab/*/*/*.parquet", hive_partitioning = true) as sales
+                            JOIN
+                                tenants t ON (t.tenant_id=sales.tenant_id)
+                            JOIN fiscal_calendar c on (CAST(sales.sale__date_local AS DATE) = c.standard_date)
+                            WHERE tenant = ?
+                                AND c.fiscal_year = ? 
+                                AND c.fiscal_quarter = ?
+                                AND c.fiscal_period = ?
+                            GROUP BY
+                                tenant,
+                                fiscal_year,
+                                fiscal_quarter,
+                                fiscal_period,
+
+                        ) 
+                    SELECT
+                            cs.tenant,
+                            cs.fiscal_quarter,
+                            cs.fiscal_period,
+                            cs.fiscal_year as current_year,
+                            ps.fiscal_year as previous_year,
+                            cs.total_sales as current_sales,
+                            ps.total_sales as previous_year_sales,
+                            (cs.total_sales - ps.total_sales)  as yoy_change
+                        FROM
+                            current_year_sales cs
+                        JOIN
+                            prev_year_sales ps ON 
+                        (cs.tenant=ps.tenant
+                        AND cs.fiscal_quarter = ps.fiscal_quarter
+                        AND cs.fiscal_period = ps.fiscal_period
+                        )
+                    
+            """
+            
+
+            result = con.execute(query, (tenant,fiscal_year,fiscal_quarter, fiscal_period,tenant,previous_year,fiscal_quarter, fiscal_period)).fetch_df()
             return jsonify(result.to_dict(orient='records'))
     
     except Exception as e:
